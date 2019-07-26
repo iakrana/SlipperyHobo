@@ -40,33 +40,86 @@ def get_all_chars():
 
 
 # Read result all_char
-with open('data.json') as json_file:
-    data = json.load(json_file)
-
-
-# slow as molassis
-def get_all_items(all_chars):
-    account_item = [{'accountName': entry['account']['name'], 'character': entry['character']['name']}
-                     for entry in all_chars]
-    URL_get_items = 'https://www.pathofexile.com/character-window/get-items'
-    for param in account_item:
-        print(param)
-        time.sleep(1.5)
-        param['inventory'] = requests.get(url=URL_get_items, params=param).json()
-        print(param['inventory'])
-    return account_item
+# with open('data.json') as json_file:
+#     data = json.load(json_file)
+#
+#
+# # slow as molassis
+# def get_all_items(all_chars):
+#     account_item = [{'accountName': entry['account']['name'], 'character': entry['character']['name']}
+#                      for entry in all_chars]
+#     URL_get_items = 'https://www.pathofexile.com/character-window/get-items'
+#     for param in account_item:
+#         print(param)
+#         time.sleep(1.5)
+#         param['inventory'] = requests.get(url=URL_get_items, params=param).json()
+#         print(param['inventory'])
+#     return account_item
 
 
 # Write result all_items
-with open('param_item.json', 'w') as outfile:
-    json.dump(get_all_items(data), outfile)
+# with open('param_item.json', 'w') as outfile:
+#     json.dump(get_all_items(data), outfile)
 
 
-# Read result all_items
-# with open('param_item.json') as json_file:
-#     item_data = json.load(json_file)
-#
-#
+# # Read result all_items
+with open('../data/char_item.json') as json_file:
+    item_data = json.load(json_file)
+
+
+def split_lists_of_bad(item_data):
+    gone = []
+    rate_limit = []
+    private = []
+    other = []
+    shame = []
+    praise = []
+    for char in item_data:
+        if 'error' in char['inventory']:
+            if char['inventory']['error']['code'] == 1:
+                gone.append(char['accountName'])
+            elif char['inventory']['error']['code'] == 2:
+                other.append(char)
+            elif char['inventory']['error']['code'] == 3:
+                rate_limit.append(char['accountName'])
+            elif char['inventory']['error']['code'] == 4:
+                other.append(char)
+            elif char['inventory']['error']['code'] == 5:
+                other.append(char)
+            elif char['inventory']['error']['code'] == 6:
+                private.append(char['accountName'])
+            else:
+                print("?", char)
+        else:
+            bad = False
+            for item in char['inventory']['items']:
+                if item['frameType'] != 3:
+                    bad = True
+            if bad:
+                shame.append(char)
+            else:
+                praise.append(char)
+    return praise, shame, private, gone, other, rate_limit
+
+
+praise, shame, private, gone, other, rate_limit = split_lists_of_bad(item_data)
+
+total = len(item_data)
+
+
+def percent_of_tot(partial):
+    return round(len(partial) / len(item_data) * 100, 2)
+
+
+print("League: OneFreeSubEachAndEveryMonthBTW%20(PL4673)")
+print("Praise", percent_of_tot(praise), "%")
+print("Shame", percent_of_tot(shame), "%")
+print("Private", percent_of_tot(private), "%")
+print("Gone", percent_of_tot(gone), "%")
+print("Rate Limited", percent_of_tot(rate_limit), "%")
+
+
+
 # for char in item_data:
 #     print(char)
     # for items in char['inventory']:
