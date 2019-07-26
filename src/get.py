@@ -34,41 +34,23 @@ def get_all_chars():
     print("Done")
     return [time_cached, all_chars]
 
-# # Write result all_chars
-# with open('data.json', 'w') as outfile:
-#     json.dump(get_all_chars()[1], outfile)
 
-
-# Read result all_char
-# with open('data.json') as json_file:
-#     data = json.load(json_file)
-#
-#
-# # slow as molassis
-# def get_all_items(all_chars):
-#     account_item = [{'accountName': entry['account']['name'], 'character': entry['character']['name']}
-#                      for entry in all_chars]
-#     URL_get_items = 'https://www.pathofexile.com/character-window/get-items'
-#     for param in account_item:
-#         print(param)
-#         time.sleep(1.5)
-#         param['inventory'] = requests.get(url=URL_get_items, params=param).json()
-#         print(param['inventory'])
-#     return account_item
-
-
-# Write result all_items
-# with open('param_item.json', 'w') as outfile:
-#     json.dump(get_all_items(data), outfile)
-
-
-# # Read result all_items
-with open('../data/char_item.json') as json_file:
-    item_data = json.load(json_file)
+# Slow as molasses
+def get_all_items(all_chars):
+    account_item = [{'accountName': entry['account']['name'], 'character': entry['character']['name']}
+                     for entry in all_chars]
+    URL_get_items = 'https://www.pathofexile.com/character-window/get-items'
+    for param in account_item:
+        print(param)
+        time.sleep(1.5)
+        param['inventory'] = requests.get(url=URL_get_items, params=param).json()
+        print(param['inventory'])
+    return account_item
 
 
 def split_lists_of_bad(item_data):
     gone = []
+    rate_limit = []
     rate_limit = []
     private = []
     other = []
@@ -102,52 +84,32 @@ def split_lists_of_bad(item_data):
     return praise, shame, private, gone, other, rate_limit
 
 
-praise, shame, private, gone, other, rate_limit = split_lists_of_bad(item_data)
-
-total = len(item_data)
-
-
 def percent_of_tot(partial):
     return round(len(partial) / len(item_data) * 100, 2)
 
 
-print("League: OneFreeSubEachAndEveryMonthBTW%20(PL4673)")
-print("Praise", percent_of_tot(praise), "%")
-print("Shame", percent_of_tot(shame), "%")
-print("Private", percent_of_tot(private), "%")
-print("Gone", percent_of_tot(gone), "%")
-print("Rate Limited", percent_of_tot(rate_limit), "%")
+if __name__ == "__main__":
+    # # Write result all_chars
+    # with open('data.json', 'w') as outfile:
+    #     json.dump(get_all_chars()[1], outfile)
 
+    # Read result all_char
+    # with open('data.json') as json_file:
+    #     data = json.load(json_file)
 
+    # Write result all_items
+    # with open('param_item.json', 'w') as outfile:
+    #     json.dump(get_all_items(data), outfile)
 
-# for char in item_data:
-#     print(char)
-    # for items in char['inventory']:
-    #     for item in items:
-    #         print(item)
-            # if item['frameType'] == 3:
-            #     print(char['accountName'], "Unique", item['inventoryId'], item['name'], item['category'], item['frameType'])
+    # # Read result all_items
+    with open('../test_data/char_item.json') as json_file:
+        item_data = json.load(json_file)
 
-# items = item_data['items']
-# for item in items:
-#     if item['frameType'] == 3:
-#         print("Unique", item['inventoryId'], item['name'], item['category'],  item['frameType'])
-#
-
-# worn_items_inventoryId = {
-#     'Helm',
-#     'Amulet',
-#     'BodyArmour'
-#     'Ring',
-#     'Ring2',
-#     'Gloves',
-#     'Belt',
-#     'Boots',
-#     'Weapon',
-#     'Offhand',
-#     'Weapon2',
-#     'Offhand2',
-#     'Flask'
-# }
-
-
+    praise, shame, private, gone, other, rate_limit = split_lists_of_bad(item_data)
+    print("League: OneFreeSubEachAndEveryMonthBTW%20(PL4673)")
+    print("Total characters                     :", len(item_data))
+    print("Praiseworthy(Probably naked)         :", len(praise), "   ,",  percent_of_tot(praise), "%", )
+    print("Shameful                             :", len(shame),  "  ,", percent_of_tot(shame), "%")
+    print("Private                              :", len(private),"   ,", percent_of_tot(private), "%")
+    print("Gone                                 :", len(gone),   "  ,", percent_of_tot(gone), "%")
+    print("Rate Limited because I was ddosing   :", len(rate_limit), "  ,", percent_of_tot(rate_limit), "%")
