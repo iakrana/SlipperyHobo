@@ -1,9 +1,13 @@
 import json
 import time
 import requests
-
+import gzip
+from timeit import default_timer as timer
 
 # TODO compression of json objects
+import gzip
+from io import StringIO, BytesIO
+
 
 def get_all_chars(URL, dump=False):
     def get_total_and_time():
@@ -36,29 +40,36 @@ def get_all_chars(URL, dump=False):
         print("# left:", total_left)
     print("Done")
     if dump:
-        fname = "../data/ladder_" + time.strftime("%Y%m%d-%H%M%S") + '.json'
+        fname = "../data/ladder_" + time.strftime("%Y%m%d-%H%M%S") + '.json.gz'
         print("Dumping to file: " + fname)
-        with open(fname, 'w') as outfile:
-            json.dump(all_chars, outfile)
+        with gzip.GzipFile(fname, 'w') as fout:
+            fout.write(json.dumps(all_chars).encode('utf-8'))
     return time_cached, all_chars
 
 
 # Slow as molasses
 def get_all_items(all_chars, dump=False):
+    rate_limiter = 1.5
     account_item = [{'accountName': entry['account']['name'], 'character': entry['character']['name']}
-                    for entry in all_chars]
+                    for entry in all_chars if 'retired' not in entry.keys()]
     URL_get_items = 'https://www.pathofexile.com/character-window/get-items'
-    for param in account_item:
-        print(param)
-        time.sleep(1.5)
+    start_get = timer()
+    for i, param in enumerate(account_item):
+        print(i, param)
+        start = timer()
         # TODO: Be nice and do some fallback stuff
         param['inventory'] = requests.get(url=URL_get_items, params=param).json()
-        print(param['inventory'])
+        end = timer()
+        time.sleep(rate_limiter - (end-start))
+        if 'error' in param['inventory']:
+            print(param['inventory']['error'])
     if dump:
-        fname = "../data/items_" + time.strftime("%Y%m%d-%H%M%S") + '.json'
+        fname = "../data/items_" + time.strftime("%Y%m%d-%H%M%S") + '.json.gz'
         print("Dumping to file: " + fname)
-        with open(fname, 'w') as outfile:
-            json.dump(account_item, outfile)
+        with gzip.GzipFile(fname, 'w') as fout:
+            fout.write(json.dumps(account_item).encode('utf-8'))
+    end_get = timer()
+    print("Time spent getting", end_get - start_get)
     return account_item
 
 
@@ -114,6 +125,7 @@ if __name__ == "__main__":
     print("Private                              :", len(private), "   ,", percent_of_tot(private, all_items), "%")
     print("Gone                                 :", len(gone), "  ,", percent_of_tot(gone, all_items), "%")
     print("Rate Limited because I was ddosing   :", len(rate_limit), "  ,", percent_of_tot(rate_limit, all_items), "%")
+
 
     # Read result all_char
     # with open('data.json') as json_file:
