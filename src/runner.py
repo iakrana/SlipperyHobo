@@ -17,7 +17,7 @@ def some_job():
     praise, shame, private, gone, other, rate_limit = src.get_from_ladder.split_into_lists(characters)
     gc, wks, exists = src.spread_push.worksheet(time.strftime("%Y-%m-%d"))
     if exists:
-        csv_string = csv_string + src.spread_push.offending_items_string(shame, dump=True)
+        csv_string = src.spread_push.offending_items_string(shame, dump=True) + csv_string
     else:
         csv_string = src.spread_push.offending_items_string(shame, dump=True)
     src.spread_push.write_result_google_sheet(csv_string, private, gc, wks)
