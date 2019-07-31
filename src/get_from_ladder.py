@@ -48,7 +48,7 @@ def all_chars_from_ladder(url, dump=False):
         print("# left:", total_left)
     print("Done")
     if dump:
-        fname = "../data/ladder_" + time.strftime("%Y%m%d-%H%M%S") + '.json.gz'
+        fname = "../../data/ladder_" + time.strftime("%Y%m%d-%H%M%S") + '.json.gz'
         print("Dumping to file: " + fname)
         with gzip.GzipFile(fname, 'w') as fout:
             fout.write(json.dumps(all_chars_).encode('utf-8'))
@@ -101,7 +101,7 @@ def all_items(ladder_character_list, dump=False):
             print(character_['account'], character_['equipped']['error'])
 
     if dump:
-        fname = "../data/characters" + time.strftime("%Y%m%d-%H%M%S") + '.json.gz'
+        fname = "../../data/characters" + time.strftime("%Y%m%d-%H%M%S") + '.json.gz'
         print("Dumping to file: " + fname)
         with gzip.GzipFile(fname, 'w') as fout:
             fout.write(json.dumps(characters_).encode('utf-8'))
@@ -160,11 +160,10 @@ if __name__ == "__main__":
     # all_items = get_all_items(data, dump=False)
     # with gzip.GzipFile(fn_json_gzip, 'r') as fin:
     #     data = json.loads(fin.read().decode('utf-8'))
-
     # # Slippery Hobo League(PL5357)
-    URL = "http://api.pathofexile.com/ladders/Slippery Hobo League (PL5357)"
-    time_cache, all_chars = all_chars_from_ladder(URL, dump=False)
-    # all_items = get_all_items(all_chars, dump=True)
+    URL_tarke = "http://api.pathofexile.com/ladders/OneFreeSubEachAndEveryMonthBTW % 20(PL4673)"
+    time_cache, all_chars = all_chars_from_ladder(URL_tarke, dump=True)
+    all_items = all_items(all_chars, dump=True)
     # praise, shame, private, gone, other, rate_limit = split_lists_of_bad(all_items)
     # if len(all_items):
     #     print("League: OneFreeSubEachAndEveryMonthBTW%20(PL4673)")
