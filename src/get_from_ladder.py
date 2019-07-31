@@ -9,6 +9,7 @@ Uses ladder, character and passive api from GGG
 import gzip
 import json
 import time
+import datetime
 from timeit import default_timer as timer
 
 import requests
@@ -73,24 +74,21 @@ def all_items(ladder_character_list, dump=False):
 
     start_get = timer()
     total_ = len(characters_)
+    print("Eligible characters:", total_)
     for i, character_ in enumerate(characters_):
         progress_ = round((i + 1) / total_ * 100, 2)
         time_left_ = (total_ - i) * 3
-        print("Progress: {:=2}% Rank: {:=2} Character: {:23} Account: {:15} Estimated time left: {:8} seconds."
+        print("Progress: {:=4}% Rank: {:=4} Character: {:23} Account: {:15} Estimated time left: {:8}."
               .format(progress_,
                       character_['rank'],
                       character_['character']['name'],
                       character_['account']['name'],
-                      time_left_))
+                      str(datetime.timedelta(seconds=time_left_))))
 
         param = {'accountName': character_['account']['name'], 'character': character_['character']['name']}
 
         # TODO: Be nice and do some fallback stuff, wrap request etc
-        start = timer()
-        character_['jewels'] = requests.get(url=url_get_jewels, params=param).json()
-        end = timer()
-        if (end - start) < rate_limiter:
-            time.sleep(rate_limiter - (end - start))
+
 
         start = timer()
         character_['equipped'] = requests.get(url=url_get_items, params=param).json()
@@ -98,10 +96,17 @@ def all_items(ladder_character_list, dump=False):
         if (end - start) < rate_limiter:
             time.sleep(rate_limiter - (end - start))
         if 'error' in character_['equipped']:
-            print(character_['account'], character_['equipped']['error'])
-
+            print(character_['account']['name'], character_['equipped']['error'])
+        else:
+            start = timer()
+            character_['jewels'] = requests.get(url=url_get_jewels, params=param).json()
+            end = timer()
+            if (end - start) < rate_limiter:
+                time.sleep(rate_limiter - (end - start))
+            if 'error' in character_['jewels']:
+                print(character_['account']['name'], character_['equipped']['error'])
     if dump:
-        fname = "../../data/characters" + time.strftime("%Y%m%d-%H%M%S") + '.json.gz'
+        fname = "../../data/characters_" + time.strftime("%Y%m%d-%H%M%S") + '.json.gz'
         print("Dumping to file: " + fname)
         with gzip.GzipFile(fname, 'w') as fout:
             fout.write(json.dumps(characters_).encode('utf-8'))
@@ -161,21 +166,21 @@ if __name__ == "__main__":
     # with gzip.GzipFile(fn_json_gzip, 'r') as fin:
     #     data = json.loads(fin.read().decode('utf-8'))
     # # Slippery Hobo League(PL5357)
-    URL_tarke = "http://api.pathofexile.com/ladders/OneFreeSubEachAndEveryMonthBTW % 20(PL4673)"
+    URL_tarke = "http://api.pathofexile.com/ladders/OneFreeSubEachAndEveryMonthBTW%20(PL4673)"
     time_cache, all_chars = all_chars_from_ladder(URL_tarke, dump=True)
     all_items = all_items(all_chars, dump=True)
-    # praise, shame, private, gone, other, rate_limit = split_lists_of_bad(all_items)
-    # if len(all_items):
-    #     print("League: OneFreeSubEachAndEveryMonthBTW%20(PL4673)")
-    #     print("Total characters                     :", len(all_items))
-    #     print("Praiseworthy(Probably naked)         :", len(praise), "   ,", percent_of_tot(praise, all_items), "%", )
-    #     print("Shameful                             :", len(shame), "  ,", percent_of_tot(shame, all_items), "%")
-    #     print("Private                              :", len(private), "   ,", percent_of_tot(private, all_items), "%")
-    #     print("Gone                                 :", len(gone), "  ,", percent_of_tot(gone, all_items), "%")
-    #     print("Rate Limited because I was ddosing   :", len(rate_limit), "  ,", percent_of_tot(rate_limit, all_items),
-    #           "%")
-    # else:
-    #     print("Empty League")
+    praise, shame, private, gone, other, rate_limit = split_into_lists(all_items)
+    if len(all_items):
+        print("League: OneFreeSubEachAndEveryMonthBTW%20(PL4673)")
+        print("Total characters                     :", len(all_items))
+        print("Praiseworthy(Probably naked)         :", len(praise), "   ,", percent_of_tot(praise, all_items), "%", )
+        print("Shameful                             :", len(shame), "  ,", percent_of_tot(shame, all_items), "%")
+        print("Private                              :", len(private), "   ,", percent_of_tot(private, all_items), "%")
+        print("Gone                                 :", len(gone), "  ,", percent_of_tot(gone, all_items), "%")
+        print("Rate Limited because I was ddosing   :", len(rate_limit), "  ,", percent_of_tot(rate_limit, all_items),
+              "%")
+    else:
+        print("Empty League")
 
     # Read result all_char
     # with open('data.json') as json_file:
