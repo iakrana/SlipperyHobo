@@ -4,18 +4,16 @@ import gzip
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import src.get_from_ladder
-
-
-scope = ['https://spreadsheets.google.com/feeds',
-         'https://www.googleapis.com/auth/drive']
+from timeit import default_timer as timer
 
 
 def worksheet():
+    scope = ['https://spreadsheets.google.com/feeds',
+             'https://www.googleapis.com/auth/drive']
     credentials = ServiceAccountCredentials.from_json_keyfile_name('../../oops.json', scope)
-    gc = gspread.authorize(credentials)
-    wks = gc.open("test")
-    sheet = gc.open("test").sheet1
-    return wks, sheet
+    gc_ = gspread.authorize(credentials)
+    wks_ = gc_.open("shame")
+    return gc_, wks_
 
 
 def frame_type_to_rarity(framtype):
@@ -28,25 +26,30 @@ def frame_type_to_rarity(framtype):
         5: 'currency',
         6: 'divination card',
         7: 'quest item',
-        8: 'prophcy',
+        8: 'prophecy',
         9: 'relic',
     }
     return rarity[framtype]
 
+# todo make list of lists and a stringify function
+
 
 def offending_items_string(shamed_accounts):
-    lts = ""
+    lts = "Account Name, Character Name, DateTime, item name, typeLine, inventoryId, rarity, icon, char_link, twitch\n "
     for char_ in shamed_accounts:
         lts = lts + \
-            char_['character']['name'] + ',' + \
-            char_['account']['name'] + ',' + \
-            datetime.now().strftime("%Y/%m/%d, %H:%M:%S") + ',' + \
-            'https://www.pathofexile.com/account/view-profile/' + \
-            char_['account']['name'] + '/characters' + "\n"
+            char_['account']['name'] +\
+            ',' + char_['character']['name'] + \
+            ',' + datetime.now().strftime("%Y/%m/%d %H:%M:%S") + \
+            ',' + ',' + ',' + ',' + ',' +\
+            ',' + 'https://www.pathofexile.com/account/view-profile/' + char_['account']['name'] + '/characters' + \
+            ',' + (char_['account']['twitch']['name'] if 'twitch' in char_['account'].keys() else "") + "\n"
         for item_ in char_['equipped']['items']:
             if item_['frameType'] != 3 and item_['inventoryId'] != 'Flask':
-                lts = lts +\
-                      ',' + item_['name'] +\
+                lts = lts + char_['account']['name'] + \
+                      ',' + char_['character']['name'] + \
+                      ',' + datetime.now().strftime("%Y/%m/%d %H:%M:%S") + \
+                      ',' + item_['name'] + \
                       ',' + item_['typeLine'] +\
                       ',' + item_['inventoryId'] +\
                       ',' + frame_type_to_rarity(item_['frameType']) +\
@@ -54,8 +57,10 @@ def offending_items_string(shamed_accounts):
                       '\n'
         for item_ in char_['jewels']['items']:
             if item_['frameType'] != 3:
-                lts = lts +\
-                      ',' + item_['name'] +\
+                lts = lts + char_['account']['name'] + \
+                      ',' + char_['character']['name'] + \
+                      ',' + datetime.now().strftime("%Y/%m/%d %H:%M:%S") + \
+                      ',' + item_['name'] + \
                       ',' + item_['typeLine'] +\
                       ',' + item_['inventoryId'] + \
                       ',' + frame_type_to_rarity(item_['frameType']) + \
@@ -66,18 +71,34 @@ def offending_items_string(shamed_accounts):
     return lts
 
 
+def write_result_google_sheet(csv_string_, private_list_):
+    gc_, wks_ = worksheet()
+    gc_.import_csv(wks_.id, csv_string_.encode('utf-8'))
+
+    private_accounts = list(dict.fromkeys([char['account']['name'] for char in private_list_]))
+    pvt_sheet = wks_.add_worksheet(title="private list", rows='1', cols=len(private_accounts))
+    pvt_sheet.insert_row(private_accounts, 1)
+
+
 if __name__ == "__main__":
+    # testing
+    start = timer()
     fname = "../../data/characters_20190731-145653.json.gz"
     with gzip.GzipFile(fname, 'r') as fin:
         data = json.loads(fin.read().decode('utf-8'))
-
+    end = timer()
+    print("zip timer", end - start)
+    start = timer()
     praise, shame, private, gone, other, rate_limit = src.get_from_ladder.split_into_lists(data)
-    lts_ = offending_items_string(shame)
-    # todo utf-8? unicode? UnicodeEncodeError: 'charmap' codec can't encode characters in position 289513-289514: character maps to <undefined>
-    f = open('csvfile.csv', 'w')
-    f.write(lts_)  # Give your csv text here.
-    f.close()
-# csv_string = spread_offending_items(shame)
-# # gc.import_csv(wks.id, csv_string.encode('utf-8'))
-# # # with open('people.csv', 'a+',  encoding="utf-8") as writeFile:
-# # #     writeFile.write(csv_string)
+    end = timer()
+    print("split timer", end - start)
+    start = timer()
+    csv_string = offending_items_string(shame)
+    end = timer()
+    print("stringify timer", end - start)
+    start = timer()
+    with open('../../data/all.csv', 'w',  encoding="utf-8") as writeFile:
+        writeFile.write(csv_string)
+    end = timer()
+    print("csvwrite timer", end - start)
+    write_result_google_sheet(csv_string, private)

@@ -89,7 +89,6 @@ def all_items(ladder_character_list, dump=False):
 
         # TODO: Be nice and do some fallback stuff, wrap request etc
 
-
         start = timer()
         character_['equipped'] = requests.get(url=url_get_items, params=param).json()
         end = timer()
