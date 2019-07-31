@@ -5,14 +5,19 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import src.get_from_ladder
 from timeit import default_timer as timer
+import time
 
 
-def worksheet():
+def worksheet(wks_name_):
     scope = ['https://spreadsheets.google.com/feeds',
              'https://www.googleapis.com/auth/drive']
     credentials = ServiceAccountCredentials.from_json_keyfile_name('../../oops.json', scope)
     gc_ = gspread.authorize(credentials)
-    wks_ = gc_.open("shame")
+
+    wks_created_ = gc_.create(wks_name_)
+    wks_created_.share('hobo-2@slipperyhobo.iam.gserviceaccount.com', perm_type='user', role='writer')
+    wks_created_.share('anarkai@gmail.com', perm_type='user', role='writer')
+    wks_ = gc_.open('shame')
     return gc_, wks_
 
 
@@ -34,7 +39,7 @@ def frame_type_to_rarity(framtype):
 # todo make list of lists and a stringify function
 
 
-def offending_items_string(shamed_accounts):
+def offending_items_string(shamed_accounts, dump=False):
     lts = "Account Name, Character Name, DateTime, item name, typeLine, inventoryId, rarity, icon, char_link, twitch\n "
     for char_ in shamed_accounts:
         lts = lts + \
@@ -68,11 +73,14 @@ def offending_items_string(shamed_accounts):
                       ',' + item_['id'] +\
                       '\n'
         lts = lts + "\n"
+    if dump:
+        with open('../../data/shame_' + time.strftime("%Y%m%d-%H%M%S") + '.csv', 'w',  encoding="utf-8") as writeFile:
+            writeFile.write(csv_string)
     return lts
 
 
-def write_result_google_sheet(csv_string_, private_list_):
-    gc_, wks_ = worksheet()
+def write_result_google_sheet(csv_string_, private_list_, wks_name_):
+    gc_, wks_ = worksheet(wks_name_)
     gc_.import_csv(wks_.id, csv_string_.encode('utf-8'))
 
     private_accounts = list(dict.fromkeys([char['account']['name'] for char in private_list_]))
@@ -95,10 +103,4 @@ if __name__ == "__main__":
     start = timer()
     csv_string = offending_items_string(shame)
     end = timer()
-    print("stringify timer", end - start)
-    start = timer()
-    with open('../../data/all.csv', 'w',  encoding="utf-8") as writeFile:
-        writeFile.write(csv_string)
-    end = timer()
-    print("csvwrite timer", end - start)
-    write_result_google_sheet(csv_string, private)
+    write_result_google_sheet(csv_string, private, time.strftime("%Y-%m-%d"))
