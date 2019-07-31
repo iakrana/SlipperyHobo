@@ -8,17 +8,24 @@ from timeit import default_timer as timer
 import time
 
 
-def worksheet(wks_name_):
+def worksheet(spreadsheet_name_):
     scope = ['https://spreadsheets.google.com/feeds',
              'https://www.googleapis.com/auth/drive']
     credentials = ServiceAccountCredentials.from_json_keyfile_name('../../oops.json', scope)
     gc_ = gspread.authorize(credentials)
+    titles_list = []
 
-    wks_created_ = gc_.create(wks_name_)
-    wks_created_.share('hobo-2@slipperyhobo.iam.gserviceaccount.com', perm_type='user', role='writer')
-    wks_created_.share('anarkai@gmail.com', perm_type='user', role='writer')
-    wks_ = gc_.open('shame')
-    return gc_, wks_
+    for spreadsheet in gc_.openall():
+        titles_list.append(spreadsheet.title)
+    if spreadsheet_name_ not in titles_list:
+        wks_ = gc_.create(spreadsheet_name_)
+        wks_.share('hobo-2@slipperyhobo.iam.gserviceaccount.com', perm_type='user', role='writer')
+        wks_.share('anarkai@gmail.com', perm_type='user', role='writer')
+        exists_ = False
+    else:
+        wks_ = gc_.open(spreadsheet_name_)
+        exists_ = True
+    return gc_, wks_, exists_
 
 
 def frame_type_to_rarity(framtype):
@@ -79,10 +86,8 @@ def offending_items_string(shamed_accounts, dump=False):
     return lts
 
 
-def write_result_google_sheet(csv_string_, private_list_, wks_name_):
-    gc_, wks_ = worksheet(wks_name_)
+def write_result_google_sheet(csv_string_, private_list_, gc_, wks_):
     gc_.import_csv(wks_.id, csv_string_.encode('utf-8'))
-
     private_accounts = list(dict.fromkeys([char['account']['name'] for char in private_list_]))
     pvt_sheet = wks_.add_worksheet(title="private list", rows='1', cols=len(private_accounts))
     pvt_sheet.insert_row(private_accounts, 1)

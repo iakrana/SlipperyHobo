@@ -6,14 +6,21 @@ import src.spread_push
 
 URL = "http://api.pathofexile.com/ladders/Slippery Hobo League (PL5357)"
 
+csv_string = []
+
 
 def some_job():
+    global csv_string
     print('This job is run every hour.')
     ladder = src.get_from_ladder.all_chars(URL)
     characters = src.get_from_ladder.all_items(ladder)
     praise, shame, private, gone, other, rate_limit = src.get_from_ladder.split_into_lists(characters)
-    csv_string = src.spread_push.offending_items_string(shame, True)
-    src.spread_push.write_result_google_sheet(csv_string, private, time.strftime("%Y-%m-%d"))
+    gc, wks, exists = src.spread_push.worksheet(time.strftime("%Y-%m-%d"))
+    if exists:
+        csv_string = csv_string + src.spread_push.offending_items_string(shame, dump=True)
+    else:
+        csv_string = src.spread_push.offending_items_string(shame, dump=True)
+    src.spread_push.write_result_google_sheet(csv_string, private, gc, wks)
 
 
 scheduler = BlockingScheduler()
