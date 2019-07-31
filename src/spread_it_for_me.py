@@ -69,8 +69,8 @@ def offending_items_string(shamed_accounts):
         lts = lts + "\n"
     return lts
 
-
-csv_string = spread_offending_items(shame)
-gc.import_csv(wks.id, csv_string.encode('utf-8'))
-# with open('people.csv', 'a+',  encoding="utf-8") as writeFile:
-#     writeFile.write(csv_string)
+# if __name__ == "__main__":
+# csv_string = spread_offending_items(shame)
+# gc.import_csv(wks.id, csv_string.encode('utf-8'))
+# # with open('people.csv', 'a+',  encoding="utf-8") as writeFile:
+# #     writeFile.write(csv_string)
