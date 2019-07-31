@@ -67,3 +67,12 @@ with gzip.GzipFile(jsonfilename, 'w') as fout:
 # bytearray(b'{\x03\xff\x00d')
 # >> > bytes(newFileBytes)
 # b'{\x03\xff\x00d'
+
+# if 'twitch' in entry['account']:
+#     twitch = entry['twitch']
+# else:
+#     twitch = None
+# characters_.append(
+#     {'accountName': entry['account']['name'],
+#      'character': entry['character']['name'],
+#      'twitch': twitch})

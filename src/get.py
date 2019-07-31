@@ -1,41 +1,49 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+Getters for characters, items and passive tree jewels for a league.
+Uses ladder, character and passive api from GGG
+"""
+
+import gzip
 import json
 import time
-import requests
-import gzip
 from timeit import default_timer as timer
 
-# TODO compression of json objects
-import gzip
-from io import StringIO, BytesIO
+import requests
 
 
-def get_all_chars(URL, dump=False):
+def all_chars_from_ladder(url, dump=False):
     def get_total_and_time():
         params = {'offset': 0, 'limit': 1}
         # TODO: Be nice and do some fallback stuff
-        r = requests.get(url=URL, params=params)
-        data = r.json()
-        return data['total'], data['cached_since']
+        r = requests.get(url=url, params=params)
+        data_ = r.json()
+        if 'cached_since' in data_:
+            return data_['total'], data_['cached_since']
+        else:
+            return data_['total'], None
 
     def get_chars(offset_, limit_):
         params = {'offset': offset_, 'limit': limit_}
         time.sleep(1.5)
         # TODO: Be nice and do some fallback stuff
-        r = requests.get(url=URL, params=params)
-        data = r.json()
-        return data['entries']
+        r = requests.get(url=url, params=params)
+        data_ = r.json()
+        return data_['entries']
 
     total, time_cached = get_total_and_time()
     total_left = total
-    all_chars = []
-    print("Total:", total)
+    all_chars_ = []
+    print("Total:", total, "cached at:", time_cached)
     while total_left > 0:
         offset = total - total_left
         if total_left > 200:
             limit = 200
         else:
             limit = total_left
-        all_chars.extend(get_chars(offset, limit))
+        all_chars_.extend(get_chars(offset, limit))
         total_left = total_left - limit
         print("# left:", total_left)
     print("Done")
@@ -43,37 +51,66 @@ def get_all_chars(URL, dump=False):
         fname = "../data/ladder_" + time.strftime("%Y%m%d-%H%M%S") + '.json.gz'
         print("Dumping to file: " + fname)
         with gzip.GzipFile(fname, 'w') as fout:
-            fout.write(json.dumps(all_chars).encode('utf-8'))
-    return time_cached, all_chars
+            fout.write(json.dumps(all_chars_).encode('utf-8'))
+    return time_cached, all_chars_
 
 
 # Slow as molasses
-def get_all_items(all_chars, dump=False):
+def all_items(ladder_character_list, dump=False):
+    url_get_items = 'https://www.pathofexile.com/character-window/get-items'
+    url_get_jewels = 'https://www.pathofexile.com/character-window/get-passive-skills?reqData=0?'
+
+    # Rate to do requests in seconds. Over 1.25 or something to not be rate limited. Solvable by doing larger requests?
     rate_limiter = 1.5
-    account_item = [{'accountName': entry['account']['name'], 'character': entry['character']['name']}
-                    for entry in all_chars if 'retired' not in entry.keys()]
-    URL_get_items = 'https://www.pathofexile.com/character-window/get-items'
+
+    """
+    Eligible characters (not retired and above level 1)
+    """
+    characters_ = []
+    for entry in ladder_character_list:
+        if 'retired' not in entry.keys() and entry['character']['level'] > 1:
+            characters_.append(entry)
+
     start_get = timer()
-    for i, param in enumerate(account_item):
-        print(i, param)
+    total_ = len(characters_)
+    for i, character_ in enumerate(characters_):
+        progress_ = round((i + 1) / total_ * 100, 2)
+        time_left_ = (total_ - i) * 3
+        print("Progress: {:=2}% Rank: {:=2} Character: {:23} Account: {:15} Estimated time left: {:8} seconds."
+              .format(progress_,
+                      character_['rank'],
+                      character_['character']['name'],
+                      character_['account']['name'],
+                      time_left_))
+
+        param = {'accountName': character_['account']['name'], 'character': character_['character']['name']}
+
+        # TODO: Be nice and do some fallback stuff, wrap request etc
         start = timer()
-        # TODO: Be nice and do some fallback stuff
-        param['inventory'] = requests.get(url=URL_get_items, params=param).json()
+        character_['jewels'] = requests.get(url=url_get_jewels, params=param).json()
         end = timer()
-        time.sleep(rate_limiter - (end-start))
-        if 'error' in param['inventory']:
-            print(param['inventory']['error'])
+        if (end - start) < rate_limiter:
+            time.sleep(rate_limiter - (end - start))
+
+        start = timer()
+        character_['equipped'] = requests.get(url=url_get_items, params=param).json()
+        end = timer()
+        if (end - start) < rate_limiter:
+            time.sleep(rate_limiter - (end - start))
+        if 'error' in character_['equipped']:
+            print(character_['account'], character_['equipped']['error'])
+
     if dump:
-        fname = "../data/items_" + time.strftime("%Y%m%d-%H%M%S") + '.json.gz'
+        fname = "../data/characters" + time.strftime("%Y%m%d-%H%M%S") + '.json.gz'
         print("Dumping to file: " + fname)
         with gzip.GzipFile(fname, 'w') as fout:
-            fout.write(json.dumps(account_item).encode('utf-8'))
+            fout.write(json.dumps(characters_).encode('utf-8'))
     end_get = timer()
     print("Time spent getting", end_get - start_get)
-    return account_item
+    return characters_
 
 
-def split_lists_of_bad(char_account_items):
+def split_into_lists(char_account_items):
     gone_ = []
     rate_limit_ = []
     private_ = []
@@ -81,25 +118,28 @@ def split_lists_of_bad(char_account_items):
     shame_ = []
     praise_ = []
     for char in char_account_items:
-        if 'error' in char['inventory']:
-            if char['inventory']['error']['code'] == 1:
-                gone_.append(char['accountName'])
-            elif char['inventory']['error']['code'] == 2:
+        if 'error' in char['equipped']:
+            if char['equipped']['error']['code'] == 1:
+                gone_.append(char)
+            elif char['equipped']['error']['code'] == 2:
                 other_.append(char)
-            elif char['inventory']['error']['code'] == 3:
-                rate_limit_.append(char['accountName'])
-            elif char['inventory']['error']['code'] == 4:
+            elif char['equipped']['error']['code'] == 3:
+                rate_limit_.append(char)
+            elif char['equipped']['error']['code'] == 4:
                 other_.append(char)
-            elif char['inventory']['error']['code'] == 5:
+            elif char['equipped']['error']['code'] == 5:
                 other_.append(char)
-            elif char['inventory']['error']['code'] == 6:
-                private_.append(char['accountName'])
+            elif char['equipped']['error']['code'] == 6:
+                private_.append(char)
             else:
                 print("?", char)
         else:
             bad = False
-            for item in char['inventory']['items']:
+            for item in char['equipped']['items']:
                 if item['frameType'] != 3 and item['inventoryId'] != 'Flask':
+                    bad = True
+            for item in char['jewels']['items']:
+                if item['frameType'] != 3:
                     bad = True
             if bad:
                 shame_.append(char)
@@ -113,19 +153,30 @@ def percent_of_tot(partial, tot):
 
 
 if __name__ == "__main__":
-    URL_tarke = "http://api.pathofexile.com/ladders/OneFreeSubEachAndEveryMonthBTW (PL4673)"
-    time_cache, all_chars = get_all_chars(URL_tarke, dump=False)
-    all_items = get_all_items(all_chars, dump=True)
-    praise, shame, private, gone, other, rate_limit = split_lists_of_bad(all_items)
+    # fn_test = '../test_data/test_chars.json'
+    #
+    # with open(fn_test) as json_file:
+    #     data = json.load(json_file)
+    # all_items = get_all_items(data, dump=False)
+    # with gzip.GzipFile(fn_json_gzip, 'r') as fin:
+    #     data = json.loads(fin.read().decode('utf-8'))
 
-    print("League: OneFreeSubEachAndEveryMonthBTW%20(PL4673)")
-    print("Total characters                     :", len(all_items))
-    print("Praiseworthy(Probably naked)         :", len(praise), "   ,", percent_of_tot(praise, all_items), "%", )
-    print("Shameful                             :", len(shame), "  ,", percent_of_tot(shame, all_items), "%")
-    print("Private                              :", len(private), "   ,", percent_of_tot(private, all_items), "%")
-    print("Gone                                 :", len(gone), "  ,", percent_of_tot(gone, all_items), "%")
-    print("Rate Limited because I was ddosing   :", len(rate_limit), "  ,", percent_of_tot(rate_limit, all_items), "%")
-
+    # # Slippery Hobo League(PL5357)
+    URL = "http://api.pathofexile.com/ladders/Slippery Hobo League (PL5357)"
+    time_cache, all_chars = all_chars_from_ladder(URL, dump=False)
+    # all_items = get_all_items(all_chars, dump=True)
+    # praise, shame, private, gone, other, rate_limit = split_lists_of_bad(all_items)
+    # if len(all_items):
+    #     print("League: OneFreeSubEachAndEveryMonthBTW%20(PL4673)")
+    #     print("Total characters                     :", len(all_items))
+    #     print("Praiseworthy(Probably naked)         :", len(praise), "   ,", percent_of_tot(praise, all_items), "%", )
+    #     print("Shameful                             :", len(shame), "  ,", percent_of_tot(shame, all_items), "%")
+    #     print("Private                              :", len(private), "   ,", percent_of_tot(private, all_items), "%")
+    #     print("Gone                                 :", len(gone), "  ,", percent_of_tot(gone, all_items), "%")
+    #     print("Rate Limited because I was ddosing   :", len(rate_limit), "  ,", percent_of_tot(rate_limit, all_items),
+    #           "%")
+    # else:
+    #     print("Empty League")
 
     # Read result all_char
     # with open('data.json') as json_file:
