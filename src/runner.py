@@ -12,8 +12,8 @@ csv_string = []
 def some_job():
     global csv_string
     print('This job is run every hour.')
-    ladder = src.get_from_ladder.all_chars(URL)
-    characters = src.get_from_ladder.all_items(ladder)
+    ladder = src.get_from_ladder.all_chars(URL, dump=True)
+    characters = src.get_from_ladder.all_items(ladder, dump=True)
     praise, shame, private, gone, other, rate_limit = src.get_from_ladder.split_into_lists(characters)
     gc, wks, exists = src.spread_push.worksheet(time.strftime("%Y-%m-%d"))
     if exists:
