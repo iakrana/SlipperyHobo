@@ -53,7 +53,7 @@ def all_chars_from_ladder(url, dump=False):
         print("Dumping to file: " + fname)
         with gzip.GzipFile(fname, 'w') as fout:
             fout.write(json.dumps(all_chars_).encode('utf-8'))
-    return time_cached, all_chars_
+    return all_chars_
 
 
 # Slow as molasses
@@ -166,11 +166,10 @@ if __name__ == "__main__":
     #     data = json.loads(fin.read().decode('utf-8'))
     # # Slippery Hobo League(PL5357)
     URL_tarke = "http://api.pathofexile.com/ladders/OneFreeSubEachAndEveryMonthBTW%20(PL4673)"
-    time_cache, all_chars = all_chars_from_ladder(URL_tarke, dump=True)
+    all_chars = all_chars_from_ladder(URL_tarke, dump=True)
     all_items = all_items(all_chars, dump=True)
     praise, shame, private, gone, other, rate_limit = split_into_lists(all_items)
     if len(all_items):
-        print("League: OneFreeSubEachAndEveryMonthBTW%20(PL4673)")
         print("Total characters                     :", len(all_items))
         print("Praiseworthy(Probably naked)         :", len(praise), "   ,", percent_of_tot(praise, all_items), "%", )
         print("Shameful                             :", len(shame), "  ,", percent_of_tot(shame, all_items), "%")

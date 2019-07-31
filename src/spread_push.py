@@ -9,12 +9,15 @@ import time
 
 
 def worksheet(spreadsheet_name_):
+    """
+    from https://www.twilio.com/blog/2017/02/an-easy-way-to-read-and-write-to-a-google-spreadsheet-in-python.html
+    """
     scope = ['https://spreadsheets.google.com/feeds',
              'https://www.googleapis.com/auth/drive']
     credentials = ServiceAccountCredentials.from_json_keyfile_name('../../oops.json', scope)
     gc_ = gspread.authorize(credentials)
-    titles_list = []
 
+    titles_list = []
     for spreadsheet in gc_.openall():
         titles_list.append(spreadsheet.title)
     if spreadsheet_name_ not in titles_list:
@@ -82,7 +85,7 @@ def offending_items_string(shamed_accounts, dump=False):
         lts = lts + "\n"
     if dump:
         with open('../../data/shame_' + time.strftime("%Y%m%d-%H%M%S") + '.csv', 'w',  encoding="utf-8") as writeFile:
-            writeFile.write(csv_string)
+            writeFile.write(lts)
     return lts
 
 
