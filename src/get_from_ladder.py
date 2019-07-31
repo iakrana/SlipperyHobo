@@ -155,35 +155,35 @@ def split_into_lists(char_account_items):
 def percent_of_tot(partial, tot):
     return round(len(partial) / len(tot) * 100, 2)
 
-
-if __name__ == "__main__":
-    # fn_test = '../test_data/test_chars.json'
-    #
-    # with open(fn_test) as json_file:
-    #     data = json.load(json_file)
-    # all_items = get_all_items(data, dump=False)
-    # with gzip.GzipFile(fn_json_gzip, 'r') as fin:
-    #     data = json.loads(fin.read().decode('utf-8'))
-    # # Slippery Hobo League(PL5357)
-    URL_tarke = "http://api.pathofexile.com/ladders/OneFreeSubEachAndEveryMonthBTW%20(PL4673)"
-    all_chars = all_chars_from_ladder(URL_tarke, dump=True)
-    all_items = all_items(all_chars, dump=True)
-    praise, shame, private, gone, other, rate_limit = split_into_lists(all_items)
-    if len(all_items):
-        print("Total characters                     :", len(all_items))
-        print("Praiseworthy(Probably naked)         :", len(praise), "   ,", percent_of_tot(praise, all_items), "%", )
-        print("Shameful                             :", len(shame), "  ,", percent_of_tot(shame, all_items), "%")
-        print("Private                              :", len(private), "   ,", percent_of_tot(private, all_items), "%")
-        print("Gone                                 :", len(gone), "  ,", percent_of_tot(gone, all_items), "%")
-        print("Rate Limited because I was ddosing   :", len(rate_limit), "  ,", percent_of_tot(rate_limit, all_items),
-              "%")
-    else:
-        print("Empty League")
-
-    # Read result all_char
-    # with open('data.json') as json_file:
-    #     data = json.load(json_file)
-
-    # # Read result all_items
-    # with open('../test_data/char_item.json') as json_file:
-    #     item_data = json.load(json_file)
+#
+# if __name__ == "__main__":
+#     # fn_test = '../test_data/test_chars.json'
+#     #
+#     # with open(fn_test) as json_file:
+#     #     data = json.load(json_file)
+#     # all_items = get_all_items(data, dump=False)
+#     # with gzip.GzipFile(fn_json_gzip, 'r') as fin:
+#     #     data = json.loads(fin.read().decode('utf-8'))
+#     # # Slippery Hobo League(PL5357)
+#     URL_tarke = "http://api.pathofexile.com/ladders/OneFreeSubEachAndEveryMonthBTW%20(PL4673)"
+#     all_chars = all_chars_from_ladder(URL_tarke, dump=True)
+#     all_items = all_items(all_chars, dump=True)
+#     praise, shame, private, gone, other, rate_limit = split_into_lists(all_items)
+#     if len(all_items):
+#         print("Total characters                     :", len(all_items))
+#         print("Praiseworthy(Probably naked)         :", len(praise), "   ,", percent_of_tot(praise, all_items), "%", )
+#         print("Shameful                             :", len(shame), "  ,", percent_of_tot(shame, all_items), "%")
+#         print("Private                              :", len(private), "   ,", percent_of_tot(private, all_items), "%")
+#         print("Gone                                 :", len(gone), "  ,", percent_of_tot(gone, all_items), "%")
+#         print("Rate Limited because I was ddosing   :", len(rate_limit), "  ,", percent_of_tot(rate_limit, all_items),
+#               "%")
+#     else:
+#         print("Empty League")
+#
+#     # Read result all_char
+#     # with open('data.json') as json_file:
+#     #     data = json.load(json_file)
+#
+#     # # Read result all_items
+#     # with open('../test_data/char_item.json') as json_file:
+#     #     item_data = json.load(json_file)

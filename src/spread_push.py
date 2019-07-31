@@ -96,19 +96,19 @@ def write_result_google_sheet(csv_string_, private_list_, gc_, wks_):
     pvt_sheet.insert_row(private_accounts, 1)
 
 
-if __name__ == "__main__":
-    # testing
-    start = timer()
-    fname = "../../data/characters_20190731-145653.json.gz"
-    with gzip.GzipFile(fname, 'r') as fin:
-        data = json.loads(fin.read().decode('utf-8'))
-    end = timer()
-    print("zip timer", end - start)
-    start = timer()
-    praise, shame, private, gone, other, rate_limit = src.get_from_ladder.split_into_lists(data)
-    end = timer()
-    print("split timer", end - start)
-    start = timer()
-    csv_string = offending_items_string(shame)
-    end = timer()
-    write_result_google_sheet(csv_string, private, time.strftime("%Y-%m-%d"))
+# if __name__ == "__main__":
+#     # testing
+#     start = timer()
+#     fname = "../../data/characters_20190731-145653.json.gz"
+#     with gzip.GzipFile(fname, 'r') as fin:
+#         data = json.loads(fin.read().decode('utf-8'))
+#     end = timer()
+#     print("zip timer", end - start)
+#     start = timer()
+#     praise, shame, private, gone, other, rate_limit = src.get_from_ladder.split_into_lists(data)
+#     end = timer()
+#     print("split timer", end - start)
+#     start = timer()
+#     csv_string = offending_items_string(shame)
+#     end = timer()
+#     write_result_google_sheet(csv_string, private, time.strftime("%Y-%m-%d"))
