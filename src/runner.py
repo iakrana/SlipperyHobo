@@ -9,12 +9,10 @@ def some_job():
     global csv_string
     global index
     print('This job is run every hour.')
-    ladder = src.get_from_ladder.all_chars(URL, dump=True)
-    # testing ladder = src.get_from_ladder.all_chars_from_ladder(URL_testing, dump=True)
+    ladder = src.get_from_ladder.all_chars_from_ladder(URL, dump=True)
     characters = src.get_from_ladder.all_items(ladder, dump=True)
     praise, shame, private, gone, other, rate_limit = src.get_from_ladder.split_into_lists(characters)
-    gc, wks, exists = src.spread_push.worksheet("hobo_" + index + "_" + time.strftime("%Y-%m-%d"))
-    # testing gc, wks, exists = src.spread_push.worksheet(time.strftime("%Y-%m-%d"))
+    gc, wks, exists = src.spread_push.worksheet("hobo_local_" + str(index) + "_" + time.strftime("%Y-%m-%d"))
     if exists:
         csv_string = src.spread_push.offending_items_string(shame, dump=True) + csv_string
     else:
@@ -51,6 +49,6 @@ if __name__ == "__main__":
     print("started " + time.strftime("%Y-%m-%d %H:%M:%S"))
 
     scheduler = BlockingScheduler()
-    scheduler.add_job(some_job, 'interval', hours=1)
-    # scheduler.add_job(some_job, 'interval', minutes=15,  start_date='2019-07-31 18:49:00')
+    scheduler.add_job(some_job, 'interval', hours=1,  start_date='2019-08-01 23:36:00')
+    # scheduler.add_job(some_job, 'interval', minutes=1)
     scheduler.start()
