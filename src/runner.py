@@ -45,10 +45,10 @@ if __name__ == "__main__":
     URL = "http://api.pathofexile.com/ladders/Slippery Hobo League (PL5357)"
     URL_testing = 'http://api.pathofexile.com/ladders/SSFHC RED LEAGUE (PL3306)'
     csv_string = ""
-    index = 0
+    index = 1
     print("started " + time.strftime("%Y-%m-%d %H:%M:%S"))
 
     scheduler = BlockingScheduler()
-    scheduler.add_job(some_job, 'interval', hours=1,  start_date='2019-08-01 23:36:00')
+    scheduler.add_job(some_job, 'interval', hours=1,  start_date='2019-08-02 00:45:00')
     # scheduler.add_job(some_job, 'interval', minutes=1)
     scheduler.start()

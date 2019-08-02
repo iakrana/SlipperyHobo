@@ -91,8 +91,15 @@ def offending_items_string(shamed_accounts, dump=False):
 
 
 def write_result_google_sheet(csv_string_, private_list_, gc_, wks_):
+    time.sleep(15)
     gc_.import_csv(wks_.id, csv_string_.encode('utf-8'))
+    time.sleep(15)
     private_accounts = list(dict.fromkeys([char['account']['name'] for char in private_list_]))
+    print(private_accounts)
+    with open('../../data/private_' + time.strftime("%Y%m%d-%H%M%S") + '.csv', 'a+', encoding="utf-8") as writeFile:
+        for pvt in private_accounts:
+            writeFile.write(str(pvt) + "\n")
+    time.sleep(15)
     pvt_sheet = wks_.add_worksheet(title="private list", rows='1', cols=len(private_accounts))
     pvt_sheet.insert_row(private_accounts, 1)
 
