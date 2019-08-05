@@ -22,8 +22,6 @@ def worksheet(spreadsheet_name_):
         titles_list.append(spreadsheet.title)
     if spreadsheet_name_ not in titles_list:
         wks_ = gc_.create(spreadsheet_name_)
-        wks_.share('hobo-2@slipperyhobo.iam.gserviceaccount.com', perm_type='user', role='writer')
-        wks_.share('anarkai@gmail.com', perm_type='user', role='writer')
         # todo: add email to share with here
         exists_ = False
     else:
