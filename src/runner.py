@@ -9,7 +9,9 @@ def some_job():
     global csv_string
     global index
     print('This job is run every hour.')
-    ladder = src.get_from_ladder.all_chars_from_ladder(URL, dump=True)
+    # try:
+    # ladder = src.get_from_ladder.all_chars_from_ladder(URL, dump=True)
+    ladder = src.get_from_ladder.all_chars_from_ladder_csv(URL_CSV, dump=True)
     characters = src.get_from_ladder.all_items(ladder, dump=True)
     praise, shame, private, gone, other, rate_limit = src.get_from_ladder.split_into_lists(characters)
     gc, wks, exists = src.spread_push.worksheet("hobo_local_" + str(index) + "_" + time.strftime("%Y-%m-%d"))
@@ -39,16 +41,19 @@ def some_job():
               )
     else:
         print("Empty League")
-
+    # except Exception as e:
+    #     print("Exception")
+    #     print(e)
 
 if __name__ == "__main__":
     URL = "http://api.pathofexile.com/ladders/Slippery Hobo League (PL5357)"
     URL_testing = 'http://api.pathofexile.com/ladders/SSFHC RED LEAGUE (PL3306)'
+    URL_CSV = 'https://www.pathofexile.com/ladder/export-csv/league/Slippery%20Hobo%20League%20(PL5357)?realm=pc'
     csv_string = ""
     index = 0
     print("started " + time.strftime("%Y-%m-%d %H:%M:%S"))
 
     scheduler = BlockingScheduler()
-    scheduler.add_job(some_job, 'interval', hours=1,  start_date='2019-08-01 23:36:00')
+    scheduler.add_job(some_job, 'interval', hours=1,  start_date='2019-08-08 02:47:20')
     # scheduler.add_job(some_job, 'interval', minutes=1)
     scheduler.start()

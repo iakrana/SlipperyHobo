@@ -11,7 +11,7 @@ import json
 import time
 import datetime
 from timeit import default_timer as timer
-
+import csv
 import requests
 
 
@@ -56,8 +56,37 @@ def all_chars_from_ladder(url, dump=False):
     return all_chars_
 
 
+def all_chars_from_ladder_csv(url, dump=False):
+    def convert_csv_to_old(ladder):
+        new_list = []
+        for character in ladder:
+            new_dict = {
+                'rank': character['Rank'],
+                'account': {'name': character['Account']},
+                'character': {'name': character['Character'],
+                              'level': character['Level'],
+                              'class': character['Class'],
+                              'experience': character['Experience']
+                              },
+            }
+
+            new_list.append(new_dict)
+        return new_list
+
+    with requests.Session() as s:
+        download = s.get(url)
+        decoded_content = download.content.decode('utf-8')
+        fname = "../../data/ladder_" + time.strftime("%Y%m%d-%H%M%S") + '.csv'
+        with open(fname, 'w', encoding="utf-8") as writeFile:
+            writeFile.write(decoded_content)
+        time.sleep(1)
+        with open(fname, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            return convert_csv_to_old(list(reader))
+
+
 # Slow as molasses
-def all_items(ladder_character_list, dump=False):
+def all_items(ladder_character_list, dump=False, csv=True):
     url_get_items = 'https://www.pathofexile.com/character-window/get-items'
     url_get_jewels = 'https://www.pathofexile.com/character-window/get-passive-skills?reqData=0?'
 
@@ -69,7 +98,8 @@ def all_items(ladder_character_list, dump=False):
     """
     characters_ = []
     for entry in ladder_character_list:
-        if 'retired' not in entry.keys() and entry['character']['level'] > 1:
+        #if 'retired' not in entry.keys() and entry['character']['level'] > 1:
+        if int(entry['character']['level']) > 1:
             characters_.append(entry)
 
     start_get = timer()
@@ -78,7 +108,7 @@ def all_items(ladder_character_list, dump=False):
     for i, character_ in enumerate(characters_):
         progress_ = round((i + 1) / total_ * 100, 2)
         time_left_ = (total_ - i) * 3
-        print("Progress: {:=4}% Rank: {:=4} Character: {:23} Account: {:15} Estimated time left: {:8}."
+        print("Progress: {:4}% Rank: {:4} Character: {:23} Account: {:15} Estimated time left: {}."
               .format(progress_,
                       character_['rank'],
                       character_['character']['name'],
@@ -157,6 +187,8 @@ def percent_of_tot(partial, tot):
 
 #
 # if __name__ == "__main__":
+#     URL = "http://api.pathofexile.com/ladders/Slippery Hobo League (PL5357)"
+#     all_chars_from_ladder(URL)
 #     # fn_test = '../test_data/test_chars.json'
 #     #
 #     # with open(fn_test) as json_file:
