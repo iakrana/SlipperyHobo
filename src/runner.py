@@ -50,7 +50,7 @@ if __name__ == "__main__":
     URL_testing = 'http://api.pathofexile.com/ladders/SSFHC RED LEAGUE (PL3306)'
     URL_CSV = 'https://www.pathofexile.com/ladder/export-csv/league/Slippery%20Hobo%20League%20(PL5357)?realm=pc'
     csv_string = ""
-    index = 0
+    index = 1
     print("started " + time.strftime("%Y-%m-%d %H:%M:%S"))
 
     scheduler = BlockingScheduler()
