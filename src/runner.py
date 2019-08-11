@@ -54,6 +54,6 @@ if __name__ == "__main__":
     print("started " + time.strftime("%Y-%m-%d %H:%M:%S"))
 
     scheduler = BlockingScheduler()
-    scheduler.add_job(some_job, 'interval', hours=1,  start_date='2019-08-08 02:47:20')
+    scheduler.add_job(some_job, 'interval', hours=1,  start_date='2019-08-08 03:00:20')
     # scheduler.add_job(some_job, 'interval', minutes=1)
     scheduler.start()
